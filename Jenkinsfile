@@ -88,16 +88,7 @@ pipeline {
             }
         }
 
-        stage('Clean Up') {
-            steps {
-                script {
-                    // Clean up the resources after deployment (optional)
-                    echo "Cleaning up"
-                    sh 'docker-compose -f docker-compose-repo/docker-compose.yml down'  // Shut down the containers
-                }
-            }
-        }
-    }
+        
 
     post {
         always {
