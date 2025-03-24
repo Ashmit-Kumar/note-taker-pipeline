@@ -52,8 +52,12 @@ pipeline {
         stage('Build Backend') {
             steps {
                 script {
-                    // Build the backend Docker image with a tag
-                    echo "Building the backend Docker image with tag ${IMAGE_TAG}"
+                    // Export environment variables before calling docker-compose
+                    echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
+                    sh """
+                    export PORT=${PORT_SECRET}
+                    export dbName=${DBNAME_SECRET}
+                    export MONGO_URI=${MONGO_URI_SECRET}
                     sh "docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                 }
             }
