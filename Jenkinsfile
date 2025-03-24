@@ -49,11 +49,11 @@ pipeline {
                 parallel(
                     backendBuild: {
                         echo "Building backend Docker image"
-                        sh "docker-compose -f note-taker-backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
+                        sh "docker-compose -f workspace/second-pipeline/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                     },
                     frontendBuild: {
                         echo "Building frontend Docker image"
-                        sh "docker-compose -f note-taker/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                        sh "docker-compose -f workspace/second-pipeline/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
                     }
                 )
             }
