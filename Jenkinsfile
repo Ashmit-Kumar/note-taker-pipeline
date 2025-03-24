@@ -1,5 +1,5 @@
 pipeline {
-    agent  { label 'agent-3' }
+    agent { label 'agent-3' }
 
     environment {
         // GitHub secrets passed as environment variables
@@ -28,7 +28,7 @@ pipeline {
                         dir('backend') {  // Clone into a subdirectory named "backend"
                             git url: 'https://github.com/Ashmit-Kumar/note-taker-backend.git', branch: 'main', credentialsId: 'github-credential'
                         }
-                    },
+                    }
                 )
             }
         }
@@ -53,12 +53,13 @@ pipeline {
             steps {
                 script {
                     // Export environment variables before calling docker-compose
-                    echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
+                    echo "Building the backend Docker image with tag ${IMAGE_TAG}"
                     sh """
                     export PORT=${PORT_SECRET}
                     export dbName=${DBNAME_SECRET}
                     export MONGO_URI=${MONGO_URI_SECRET}
-                    sh "docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
+                    docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend
+                    """
                 }
             }
         }
@@ -68,7 +69,9 @@ pipeline {
                 script {
                     // Build the frontend Docker image with a tag
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                    sh """
+                    docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend
+                    """
                 }
             }
         }
@@ -78,7 +81,9 @@ pipeline {
                 script {
                     // Deploy the previously built images (no need to rebuild them)
                     echo "Deploying to staging with tag ${IMAGE_TAG}"
-                    sh 'docker-compose -f workspace/second-pipeline/docker-compose.yml up -d'  // Run containers in detached mode
+                    sh """
+                    docker-compose -f /home/ubuntu/workspace/second-pipeline/docker-compose.yml up -d
+                    """
                 }
             }
         }
