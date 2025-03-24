@@ -58,7 +58,7 @@ pipeline {
                     export PORT=${PORT_SECRET}
                     export dbName=${DBNAME_SECRET}
                     export MONGO_URI=${MONGO_URI_SECRET}
-                    docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend
+                    sudo docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend
                     """
                 }
             }
@@ -71,7 +71,7 @@ pipeline {
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
                     sh """
 		    export VITE_API_URL=${VITE_API_URL}
-                    docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend
+                    sudo docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend
                     """
                 }
             }
@@ -83,7 +83,7 @@ pipeline {
                     // Deploy the previously built images (no need to rebuild them)
                     echo "Deploying to staging with tag ${IMAGE_TAG}"
                     sh """
-                    docker-compose -f /home/ubuntu/workspace/second-pipeline/docker-compose.yml up -d
+                    sudo docker-compose -f /home/ubuntu/workspace/second-pipeline/docker-compose.yml up -d
                     """
                 }
             }
