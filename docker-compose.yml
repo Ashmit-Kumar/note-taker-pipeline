@@ -1,0 +1,39 @@
+services:
+  frontend:
+    build:
+      context: ./frontend  # Path to the frontend directory
+      dockerfile: dockerfile # Optional: Specify a custom Dockerfile (defaults to 'Dockerfile')
+    ports:
+      - "3000:3000"  # Expose frontend port
+    environment:
+      - FRONTEND_API_URL=http://${BACKEND_IP}:${PORT}  # Assuming you are passing a port for the frontend
+    depends_on:
+      - backend
+
+  backend:
+    image: ashmit1020/note-backend:v1  # Replace with your backend image name
+    ports:
+      - "${PORT}:${PORT}"  # Expose the backend port dynamically using the environment variable
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}  # Use the secret file for PORT
+      - dbName=${dbName}  # Use the secret file for dbName
+      - MONGO_URI=${MONGO_URI}  # Use the secret file for MONGO_URI
+    secrets:
+      - PORT
+      - dbName
+      - MONGO_URI
+    networks:
+      - app-network
+
+secrets:
+  port_secret:
+    external: true  # The secret for PORT
+  dbname_secret:
+    external: true  # The secret for dbName
+  mongo_uri_secret:
+    external: true  # The secret for MONGO_URI
+
+networks:
+  app-network:
+    driver: bridge  # Use bridge network for local communication
