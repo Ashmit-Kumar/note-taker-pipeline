@@ -4,11 +4,13 @@ pipeline {
     environment {
         // GitHub secrets passed as environment variables
         PORT_SECRET = credentials('PORT')
-        DBNAME_SECRET = credentials('DBNAME')
+        DBNAME_SECRET = credentials('dbName')
         MONGO_URI_SECRET = credentials('MONGO_URI')
-
+	VITE_API_URL = credentials('VITE_API_URL')
         // Tag based on the current build number or Git commit hash
-        IMAGE_TAG = "latest-${BUILD_NUMBER}"  // Use Jenkins build number or other tags
+        IMAGE_TAG = "v${BUILD_NUMBER}"  // Use Jenkins build number or other tags
+	DOCKER_HUB_TOKEN = credentials('docker-pat')
+	DOCKER_HUB_USER = credentials('docker-username')
     }
 
     stages {
@@ -29,13 +31,18 @@ pipeline {
                 }
             }
         }
-
-        stage('Build Frontend') {
+         stage('Docker Setup') {
             steps {
                 script {
-                    // Build the frontend Docker image with a tag
-                    echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f docker-compose-repo/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                    // Docker login with personal access token
+                    echo "Logging into Docker Hub"
+                    sh """
+                    docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_TOKEN}
+                    """
+
+                    // Check Docker Compose version
+                    echo "Checking Docker Compose version"
+                    sh "docker-compose --version"
                 }
             }
         }
@@ -45,17 +52,28 @@ pipeline {
                 script {
                     // Build the backend Docker image with a tag
                     echo "Building the backend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f docker-compose-repo/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
+                    sh "docker-compose -f note-taker-backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                 }
             }
         }
 
+        stage('Build Frontend') {
+            steps {
+                script {
+                    // Build the frontend Docker image with a tag
+                    echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
+                    sh "docker-compose -f note-taker/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                }
+            }
+        }
+
+
         stage('Run Tests') {
             steps {
                 script {
-                    // Run tests in the backend container (if applicable)
+                    // Run tests in the container (if applicable)
                     echo "Running tests"
-                    sh 'docker-compose -f docker-compose-repo/docker-compose.yml run --rm backend npm test'  // Adjust command as needed
+                    sh 'docker-compose -f note-taker-pipeline/docker-compose.yml run --rm backend npm test'  // Adjust command as needed
                 }
             }
         }

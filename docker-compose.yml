@@ -1,28 +1,22 @@
 services:
   frontend:
-    build:
-      context: ./frontend  # Path to the frontend directory
-      dockerfile: dockerfile # Optional: Specify a custom Dockerfile (defaults to 'Dockerfile')
+    image: note-frontend:${IMAGE_TAG}  # Use pre-built frontend image with dynamic tag
     ports:
       - "3000:3000"  # Expose frontend port
     environment:
-      - FRONTEND_API_URL=http://${BACKEND_IP}:${PORT}  # Assuming you are passing a port for the frontend
+      - FRONTEND_API_URL=${VITE_API_URL}  # Assuming you are passing a port for the frontend
     depends_on:
       - backend
 
   backend:
-    image: ashmit1020/note-backend:v1  # Replace with your backend image name
+    image: note-backend:${IMAGE_TAG}  # Use pre-built backend image with dynamic tag
     ports:
       - "${PORT}:${PORT}"  # Expose the backend port dynamically using the environment variable
     environment:
       - NODE_ENV=production
       - PORT=${PORT}  # Use the secret file for PORT
       - dbName=${dbName}  # Use the secret file for dbName
-      - MONGO_URI=${MONGO_URI}  # Use the secret file for MONGO_URI
-    secrets:
-      - PORT
-      - dbName
-      - MONGO_URI
+      - MONGO_URI=${MONGO_URI}
     networks:
       - app-network
 
@@ -37,3 +31,9 @@ secrets:
 networks:
   app-network:
     driver: bridge  # Use bridge network for local communication
+
+
+
+
+
+
