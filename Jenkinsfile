@@ -29,12 +29,6 @@ pipeline {
                             git url: 'https://github.com/Ashmit-Kumar/note-taker-backend.git', branch: 'main', credentialsId: 'github-credential'
                         }
                     },
-                    pipelineRepo: {
-                        echo "Cloning pipeline repository"
-                        dir('pipeline') {  // Clone into a subdirectory named "pipeline"
-                            git url: 'https://github.com/Ashmit-Kumar/note-taker-pipeline.git', branch: 'main', credentialsId: 'github-credential'
-                        }
-                    }
                 )
             }
         }
@@ -60,7 +54,7 @@ pipeline {
                 script {
                     // Build the backend Docker image with a tag
                     echo "Building the backend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f note-taker-backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
+                    sh "docker-compose -f workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                 }
             }
         }
@@ -70,7 +64,7 @@ pipeline {
                 script {
                     // Build the frontend Docker image with a tag
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f note-taker/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                    sh "docker-compose -f workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
                 }
             }
         }
@@ -80,7 +74,7 @@ pipeline {
                 script {
                     // Deploy the previously built images (no need to rebuild them)
                     echo "Deploying to staging with tag ${IMAGE_TAG}"
-                    sh 'docker-compose -f docker-compose-repo/docker-compose.yml up -d'  // Run containers in detached mode
+                    sh 'docker-compose -f workspace/second-pipeline/docker-compose.yml up -d'  // Run containers in detached mode
                 }
             }
         }
