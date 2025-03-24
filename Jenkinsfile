@@ -1,13 +1,14 @@
 pipeline {
-    agent any
+    agent  { label 'agent-3' }
 
     environment {
         // GitHub secrets passed as environment variables
         PORT_SECRET = credentials('PORT')
         DBNAME_SECRET = credentials('dbName')
         MONGO_URI_SECRET = credentials('MONGO_URI')
-        VITE_API_URL = '13.203.210.224' // Directly set EC2 IP
-        IMAGE_TAG = "v${BUILD_NUMBER}"
+        VITE_API_URL = credentials('VITE_API_URL')
+        // Tag based on the current build number or Git commit hash
+        IMAGE_TAG = "v${BUILD_NUMBER}"  // Use Jenkins build number or other tags
         DOCKER_HUB_TOKEN = credentials('docker-pat')
         DOCKER_HUB_USER = credentials('docker-username')
     }
@@ -18,15 +19,21 @@ pipeline {
                 parallel(
                     frontend: {
                         echo "Cloning frontend repository"
-                        git url: 'https://github.com/Ashmit-Kumar/note-taker.git', branch: 'main', credentialsId: 'github-credential'
+                        dir('frontend') {  // Clone into a subdirectory named "frontend"
+                            git url: 'https://github.com/Ashmit-Kumar/note-taker.git', branch: 'main', credentialsId: 'github-credential'
+                        }
                     },
                     backend: {
                         echo "Cloning backend repository"
-                        git url: 'https://github.com/Ashmit-Kumar/note-taker-backend.git', branch: 'main', credentialsId: 'github-credential'
+                        dir('backend') {  // Clone into a subdirectory named "backend"
+                            git url: 'https://github.com/Ashmit-Kumar/note-taker-backend.git', branch: 'main', credentialsId: 'github-credential'
+                        }
                     },
                     pipelineRepo: {
                         echo "Cloning pipeline repository"
-                        git url: 'https://github.com/Ashmit-Kumar/note-taker-pipeline.git', branch: 'main', credentialsId: 'github-credential'
+                        dir('pipeline') {  // Clone into a subdirectory named "pipeline"
+                            git url: 'https://github.com/Ashmit-Kumar/note-taker-pipeline.git', branch: 'main', credentialsId: 'github-credential'
+                        }
                     }
                 )
             }
@@ -35,50 +42,45 @@ pipeline {
         stage('Docker Setup') {
             steps {
                 script {
+                    // Docker login with personal access token
                     echo "Logging into Docker Hub"
-                    sh "docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_TOKEN}"
+                    sh """
+                    docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_TOKEN}
+                    """
 
+                    // Check Docker Compose version
                     echo "Checking Docker Compose version"
                     sh "docker-compose --version"
                 }
             }
         }
 
-        stage('Build Images') {
-            steps {
-                parallel(
-                    backendBuild: {
-                        echo "Building backend Docker image"
-                        sh "docker-compose -f workspace/second-pipeline/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
-                    },
-                    frontendBuild: {
-                        echo "Building frontend Docker image"
-                        sh "docker-compose -f workspace/second-pipeline/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
-                    }
-                )
-            }
-        }
-
-        stage('Run Tests') {
+        stage('Build Backend') {
             steps {
                 script {
-                    echo "Running tests"
-                    sh 'docker-compose -f note-taker-pipeline/docker-compose.yml run --rm backend npm test'
+                    // Build the backend Docker image with a tag
+                    echo "Building the backend Docker image with tag ${IMAGE_TAG}"
+                    sh "docker-compose -f note-taker-backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                 }
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Build Frontend') {
             steps {
                 script {
-                    echo "Deploying to EC2 with tag ${IMAGE_TAG}"
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@${VITE_API_URL} << 'EOF'
-                        docker-compose -f /path/to/docker-compose.yml pull
-                        docker-compose -f /path/to/docker-compose.yml up -d
-                        docker image prune -f
-                    EOF
-                    '''
+                    // Build the frontend Docker image with a tag
+                    echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
+                    sh "docker-compose -f note-taker/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                script {
+                    // Deploy the previously built images (no need to rebuild them)
+                    echo "Deploying to staging with tag ${IMAGE_TAG}"
+                    sh 'docker-compose -f docker-compose-repo/docker-compose.yml up -d'  // Run containers in detached mode
                 }
             }
         }
@@ -86,6 +88,7 @@ pipeline {
 
     post {
         always {
+            // This section is optional. You can add notifications or any final steps here.
             echo "Pipeline completed"
         }
         success {
