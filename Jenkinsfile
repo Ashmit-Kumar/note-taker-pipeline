@@ -54,7 +54,7 @@ pipeline {
                 script {
                     // Build the backend Docker image with a tag
                     echo "Building the backend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
+                    sh "docker-compose -f /home/ubuntu/workspace/second-pipeline/backend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} backend"
                 }
             }
         }
@@ -64,7 +64,7 @@ pipeline {
                 script {
                     // Build the frontend Docker image with a tag
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
-                    sh "docker-compose -f workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
+                    sh "docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend"
                 }
             }
         }
