@@ -70,6 +70,7 @@ pipeline {
                     // Build the frontend Docker image with a tag
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
                     sh """
+		    export VITE_API_URL=${VITE_API_URL}
                     docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend
                     """
                 }
