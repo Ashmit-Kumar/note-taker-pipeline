@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     image: note-frontend:${IMAGE_TAG}  # Use pre-built frontend image with dynamic tag
@@ -7,6 +9,8 @@ services:
       - FRONTEND_API_URL=${VITE_API_URL}  # Assuming you are passing a port for the frontend
     depends_on:
       - backend
+    env_file:
+      - /home/ubuntu/workspace/second-pipeline/.env  # Use the .env file with frontend environment variables
 
   backend:
     image: note-backend:${IMAGE_TAG}  # Use pre-built backend image with dynamic tag
@@ -19,6 +23,8 @@ services:
       - MONGO_URI=${MONGO_URI}
     networks:
       - app-network
+    env_file:
+      - /home/ubuntu/workspace/second-pipeline/.env  # Use the .env file with backend environment variables
 
 secrets:
   port_secret:
@@ -31,9 +37,4 @@ secrets:
 networks:
   app-network:
     driver: bridge  # Use bridge network for local communication
-
-
-
-
-
-
+y

@@ -57,6 +57,14 @@ pipeline {
                     "MONGO_URI=${MONGO_URI_SECRET}"
                 ]) {
                     script {
+                        // Create .env file for backend
+                        echo "Creating .env file for the backend"
+                        sh """
+                        echo "PORT=${PORT_SECRET}" > /home/ubuntu/workspace/second-pipeline/backend/.env
+                        echo "DBNAME=${DBNAME_SECRET}" >> /home/ubuntu/workspace/second-pipeline/backend/.env
+                        echo "MONGO_URI=${MONGO_URI_SECRET}" >> /home/ubuntu/workspace/second-pipeline/backend/.env
+                        """
+                        
                         // Build the backend Docker image with tag ${IMAGE_TAG}
                         echo "Building the backend Docker image with tag ${IMAGE_TAG}"
                         sh """
@@ -70,10 +78,15 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 script {
+                    // Create .env file for frontend
+                    echo "Creating .env file for the frontend"
+                    sh """
+                    echo "VITE_API_URL=${VITE_API_URL}" > /home/ubuntu/workspace/second-pipeline/frontend/.env
+                    """
+                    
                     // Build the frontend Docker image with a tag
                     echo "Building the frontend Docker image with tag ${IMAGE_TAG}"
                     sh """
-                    export VITE_API_URL=${VITE_API_URL}
                     sudo docker-compose -f /home/ubuntu/workspace/second-pipeline/frontend/docker-compose.yml build --no-cache --build-arg IMAGE_TAG=${IMAGE_TAG} frontend
                     """
                 }
@@ -83,9 +96,18 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 script {
+                    // Create .env file for both frontend and backend in the deploy stage
+                    echo "Creating .env file for deployment"
+                    sh """
+                    echo "PORT=${PORT_SECRET}" > /home/ubuntu/workspace/second-pipeline/.env
+                    echo "DBNAME=${DBNAME_SECRET}" >> /home/ubuntu/workspace/second-pipeline/.env
+                    echo "MONGO_URI=${MONGO_URI_SECRET}" >> /home/ubuntu/workspace/second-pipeline/.env
+                    echo "VITE_API_URL=${VITE_API_URL}" >> /home/ubuntu/workspace/second-pipeline/.env
+                    """
+                    
                     // Deploy the previously built images (no need to rebuild them)
                     echo "Deploying to staging with tag ${IMAGE_TAG}"
-                    sh """
+                    sh """	
                     sudo docker-compose -f /home/ubuntu/workspace/second-pipeline/docker-compose.yml up -d
                     """
                 }
