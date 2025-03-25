@@ -2,7 +2,7 @@ services:
   frontend:
     image: note-frontend # Use pre-built frontend image with dynamic tag
     ports:
-      - "80:80"  # Expose frontend port
+      - "5173:80"  # Expose frontend port
     environment:
       - FRONTEND_API_URL=${VITE_API_URL}  # Assuming you are passing a port for the frontend
     depends_on:
