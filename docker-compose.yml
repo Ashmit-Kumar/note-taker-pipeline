@@ -35,4 +35,4 @@ secrets:
 networks:
   app-network:
     driver: bridge  # Use bridge network for local communication
-y
+
